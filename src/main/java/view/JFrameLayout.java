@@ -1,10 +1,10 @@
-package ui;
+package view;
 
 import java.awt.*;
 
-class MainScreenLayout implements LayoutManager {
+class JFrameLayout implements LayoutManager {
 
-    public MainScreenLayout() {
+    public JFrameLayout() {
     }
 
     public void addLayoutComponent(String name, Component comp) {

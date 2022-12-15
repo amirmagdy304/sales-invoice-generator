@@ -1,10 +1,10 @@
-package ui;
+package view;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
 
-public class MainScreen extends javax.swing.JFrame {
+public class JFrame extends javax.swing.JFrame {
 
     //  Menu
     private JMenuBar menuBar;
@@ -38,8 +38,8 @@ public class MainScreen extends javax.swing.JFrame {
     private JPanel invoiceDetailsBtnPNL;
     private JButton saveInvoiceBtn, cancelInvoiceBtn;
 
-    public MainScreen() {
-        MainScreenLayout customLayout = new MainScreenLayout();
+    public JFrame() {
+        JFrameLayout customLayout = new JFrameLayout();
 
         getContentPane().setFont(new Font("Helvetica", Font.PLAIN, 12));
         getContentPane().setLayout(customLayout);
@@ -124,7 +124,7 @@ public class MainScreen extends javax.swing.JFrame {
     }
 
     public static void main(String args[]) {
-        MainScreen window = new MainScreen();
+        JFrame window = new JFrame();
         window.setTitle("Sales Invoice Generator");
         window.pack();
         window.setVisible(true);

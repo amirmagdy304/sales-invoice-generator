@@ -1,1 +1,9 @@
-﻿
+﻿Invoice No.,Invoice Date,Customer Name,Total amount
+SI1,1/1/2022,Amir,1000
+SI2,1/2/2022,Remonda,1500
+SI3,1/3/2022,Carl,2000
+SI4,1/4/2022,Patrick,2500
+SI5,1/5/2022,Patrick,3000
+SI6,1/6/2022,Patrick,3500
+SI7,1/7/2022,Patrick,4000
+SI8,1/8/2022,Patrick,4500

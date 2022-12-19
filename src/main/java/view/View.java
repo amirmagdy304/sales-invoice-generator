@@ -1,35 +1,48 @@
 package view;
 
+
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import controller.Controller;
+import model.FileOperations;
+import model.InvoiceHeader;
+import model.InvoiceLine;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import static java.awt.EventQueue.invokeLater;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 class View extends JFrame {
 
 
 //    Variables declaration
 
-//  Declare menu bar
+    Controller controller = new Controller();
+    InvoiceLine invoiceLine = new InvoiceLine();
+    InvoiceHeader invoiceHeader = new InvoiceHeader();
+    FileOperations fileOperations = new FileOperations();
+    //  Declare menu bar
     private JMenuBar MenuBar;
     private JMenu fileMenu;
     private JMenuItem loadFileMenuBtn;
     private JMenuItem saveFileMenuBtn;
-//  Declare main panels
+    //  Declare main panels
     private JPanel mainPanel;
     private JPanel leftPanel;
     private JPanel rightPanel;
-//    Declare invoices header
+    //    Declare invoices header
     private JLabel invoicesTableTitleLBL;
     private JScrollPane invoicesTBLScrollPane;
     private JTable invoicesTBL;
     private JButton createNewInvoiceBtn;
     private JButton deleteInvoiceBtn;
-//    Declare invoice lines
+    //    Declare invoice lines
     private JLabel invoiceNumberLBL;
     private JLabel invoiceNumberValueLBL;
     private JLabel invoiceDateLBL;
@@ -39,18 +52,23 @@ class View extends JFrame {
     private JLabel invoiceTotalLBL;
     private JLabel invoiceTotalValueLBL;
     private JLabel invoicesItemsTableTitleLBL;
-    private JScrollPane invoiceItemTBLScrollPane;
-    private JTable invoiceItemTBL;
-    private JButton saveBtn;
-    private JButton cancelBtn;
 
     // End of variables declaration
+    private JScrollPane invoiceItemTBLScrollPane;
+    private JTable invoiceLinesTBL;
+    private JButton saveBtn;
+    private JButton cancelBtn;
 
     public View() {
         initComponents();
     }
 
-    Controller controller = new Controller();
+    public static void main(String[] args) {
+        View window = new View();
+        window.setTitle("Sales Invoice Generator");
+        window.pack();
+        window.setVisible(true);
+    }
 
     private void initComponents() {
 //       menu bar
@@ -66,7 +84,13 @@ class View extends JFrame {
 //          invoices header
         invoicesTableTitleLBL = new JLabel();
         invoicesTBLScrollPane = new JScrollPane();
-        invoicesTBL = new JTable(controller.getInvoiceHeaderData(),controller.getInvoiceHeaderCols());
+
+        invoicesTBL = new JTable();
+        DefaultTableModel invoicesTableModel = new DefaultTableModel(fileOperations.readTableData(invoiceHeader.getInvoiceHeaderFilePath())
+                , fileOperations.readTableHeader(invoiceHeader.getInvoiceHeaderFilePath()));
+        invoicesTBL.setModel(invoicesTableModel);
+        invoicesTBL.getSelectionModel().addListSelectionListener(evt -> selectRowActionPerformed());
+
         createNewInvoiceBtn = new JButton();
         deleteInvoiceBtn = new JButton();
 //          invoice lines
@@ -80,31 +104,24 @@ class View extends JFrame {
         invoiceTotalValueLBL = new JLabel();
         invoicesItemsTableTitleLBL = new JLabel();
         invoiceItemTBLScrollPane = new JScrollPane();
-        invoiceItemTBL = new JTable(controller.getInvoiceDetailsData(),controller.getInvoiceDetailsCols());
+
+        invoiceLinesTBL = new JTable();
+        DefaultTableModel invoicesLinesTableModel = new DefaultTableModel(
+                fileOperations.readTableData( invoiceLine.getInvoiceLinesFilePath(),""),
+                fileOperations.readTableHeader(invoiceLine.getInvoiceLinesFilePath()));
+        invoiceLinesTBL.setModel(invoicesLinesTableModel);
+
         saveBtn = new JButton();
         cancelBtn = new JButton();
 
 
-
-//        invoicesTBL.setModel(new table.DefaultTableModel(
-//                new Object[][]{fileOperations.getInvoiceHeaderData()},
-//                new String[]{String.valueOf(fileOperations.getFileHeader(fileOperations.invoiceHeaderFilePath))}
-//        ));
-
         invoicesTBLScrollPane.setViewportView(invoicesTBL);
         createNewInvoiceBtn.setText("Create New Invoice");
-        createNewInvoiceBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                createNewInvoiceBtnActionPerformed(evt);
-            }
-        });
+        createNewInvoiceBtn.addActionListener(evt -> createNewInvoiceBtnActionPerformed());
 
         deleteInvoiceBtn.setText("Delete Invoice");
-        deleteInvoiceBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                deleteInvoiceBtnActionPerformed(evt);
-            }
-        });
+        deleteInvoiceBtn.addActionListener(
+                evt -> deleteInvoiceBtnActionPerformed());
 
         invoicesTableTitleLBL.setText("Invoices Table");
 
@@ -143,45 +160,23 @@ class View extends JFrame {
         );
 
         invoiceNumberLBL.setText("Invoice Number");
-        invoiceNumberValueLBL.setText("23");
+        invoiceNumberValueLBL.setText("");
         invoiceDateLBL.setText("Invoice Date");
-        invoiceDateTXT.setText("1/1/2022");
-        invoiceDateTXT.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                invoiceDateTXTActionPerformed(evt);
-            }
-        });
+        invoiceDateTXT.setText("");
 
         customerNameLBL.setText("Customer Name");
-        customerNameTXT.setText("Amir");
+        customerNameTXT.setText("");
         invoiceTotalLBL.setText("Invoice Total");
-        invoiceTotalValueLBL.setText("350.50");
+        invoiceTotalValueLBL.setText("");
 
-//        invoiceItemTBL.setModel(new table.DefaultTableModel(
-//                new Object[][]{
-//                        {null, null, null, null},
-//                        {null, null, null, null},
-//                        {null, null, null, null},
-//                        {null, null, null, null}
-//                },
-//                new String[]{
-//                        "Title 1", "Title 2", "Title 3", "Title 4"
-//                }
-//        ));
-        invoiceItemTBLScrollPane.setViewportView(invoiceItemTBL);
+        invoiceItemTBLScrollPane.setViewportView(invoiceLinesTBL);
         saveBtn.setText("Save");
-        saveBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                saveBtnActionPerformed(evt);
-            }
-        });
+        saveBtn.addActionListener(
+                evt -> saveBtnActionPerformed());
 
         cancelBtn.setText("Cancel");
-        cancelBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                cancelBtnActionPerformed(evt);
-            }
-        });
+        cancelBtn.addActionListener(
+                evt -> cancelBtnActionPerformed());
 
         invoicesItemsTableTitleLBL.setText("Invoice Items");
         GroupLayout rightPanelLayout = new GroupLayout(rightPanel);
@@ -247,44 +242,22 @@ class View extends JFrame {
                                 .addContainerGap())
         );
 
-        GroupLayout mainPanelLayout = new GroupLayout(mainPanel);
-        mainPanel.setLayout(new GridLayout(1,2));
+        mainPanel.setLayout(new GridLayout(1, 2));
         mainPanel.add(leftPanel);
         mainPanel.add(rightPanel);
-/*
-        mainPanel.setLayout(mainPanelLayout);
-        mainPanelLayout.setHorizontalGroup(
-                mainPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(mainPanelLayout.createSequentialGroup()
-                                .addComponent(leftPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(rightPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        mainPanelLayout.setVerticalGroup(
-                mainPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(leftPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(rightPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-*/
 
         fileMenu.setText("File");
 
         loadFileMenuBtn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
         loadFileMenuBtn.setText("Load File");
-        loadFileMenuBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                loadFileMenuBtnActionPerformed(evt);
-            }
-        });
+        loadFileMenuBtn.addActionListener(
+                evt -> loadFileMenuBtnActionPerformed());
         fileMenu.add(loadFileMenuBtn);
 
         saveFileMenuBtn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
         saveFileMenuBtn.setText("Save FIle");
-        saveFileMenuBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                saveFileMenuBtnActionPerformed(evt);
-            }
-        });
+        saveFileMenuBtn.addActionListener(
+                evt -> saveFileMenuBtnActionPerformed());
         fileMenu.add(saveFileMenuBtn);
 
         MenuBar.add(fileMenu);
@@ -305,51 +278,55 @@ class View extends JFrame {
         pack();
     }
 
-    private void createNewInvoiceBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
+    private void createNewInvoiceBtnActionPerformed() {
+        controller.createNewInvoice(invoicesTBL,
+                invoiceLinesTBL,
+                invoiceNumberValueLBL,
+                invoiceDateTXT,
+                customerNameTXT,
+                invoiceTotalValueLBL);
     }
 
-    private void deleteInvoiceBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void saveBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void cancelBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void loadFileMenuBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void saveFileMenuBtnActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void invoiceDateTXTActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
-    }
-
-    private void customerNameTXTActionPerformed(ActionEvent evt) {
-        // TODO add your handling code here:
+    private void deleteInvoiceBtnActionPerformed() {
+        controller.deleteSelectedRows(invoicesTBL,invoiceLine.getInvoiceLinesFilePath(),invoiceHeader.getInvoiceHeaderFilePath());
+        cancelBtnActionPerformed();
     }
 
 
-    public static void main(String args[]) {
-//        invokeLater(new Runnable() {
-//            public void run() {
-//                View window = new View();
-//                window.setTitle("Sales Invoice Generator");
-//                window.setVisible(true);
-//            }
-//        });
+    private void saveBtnActionPerformed() {
+        controller.saveNewInvoice(invoiceNumberValueLBL,
+                invoiceDateTXT,
+                customerNameTXT,
+                invoiceLinesTBL,
+                invoicesTBL);
 
-        View window = new View();
-        window.setTitle("Sales Invoice Generator");
-        window.pack();
-        window.setVisible(true);
     }
+
+    private void cancelBtnActionPerformed() {
+        controller.clearLinesTable(invoiceNumberValueLBL,
+                invoiceLinesTBL,
+                invoiceDateTXT,
+                customerNameTXT,
+                invoiceTotalValueLBL);
+    }
+
+    private void loadFileMenuBtnActionPerformed() {
+
+        controller.loadFromFile(this, invoicesTBL);
+    }
+
+    private void selectRowActionPerformed() {
+        controller.loadSelectedInvoiceLines(invoicesTBL,
+                invoiceLinesTBL,
+                invoiceNumberValueLBL,
+                invoiceDateTXT,
+                customerNameTXT,
+                invoiceTotalValueLBL);
+    }
+
+    private void saveFileMenuBtnActionPerformed() {
+        fileOperations.saveInvoiceDataFromFIleChooser(this,invoiceHeader.getInvoiceHeaderFilePath());
+        fileOperations.saveInvoiceDataFromFIleChooser(this,invoiceLine.getInvoiceLinesFilePath());
+    }
+
 }

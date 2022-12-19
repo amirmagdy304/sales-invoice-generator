@@ -2,25 +2,48 @@ package model;
 
 public class InvoiceHeader {
 
-    FileOperations fileOperations = new FileOperations();
+    String InvoiceNumber;
+    String invoiceDate;
+    String customerName;
+    double totalAmount;
 
-    private String invoiceHeaderFilePath = "D:/Git/SWCM CC/SIG/src/main/resources/InvoiceHeader.csv";
-    private String[] invoiceHeaderCols = fileOperations.getFileHeader(invoiceHeaderFilePath);
-    private String[][] invoiceHeaderData = fileOperations.getInvoiceHeaderData(invoiceHeaderFilePath);
-
-
-
-    public String[] getInvoiceHeaderCols() {
-        return invoiceHeaderCols;
+    public double getTotalAmount() {
+        return totalAmount;
     }
 
-    public String[][] getInvoiceHeaderData() {
-        return invoiceHeaderData;
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
 
 
-//    private String[] InvoiceLines() {
-//        return new String[0];
-//    }
+    public void setInvoiceNumber(String invoiceNumber) {
+        InvoiceNumber = invoiceNumber;
+    }
+
+    public void setInvoiceDate(String invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getInvoiceNumber() {
+        return InvoiceNumber;
+    }
+
+
+    public String getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getInvoiceHeaderFilePath() {
+        return "src/main/resources/InvoiceHeader.csv";
+    }
+
 }

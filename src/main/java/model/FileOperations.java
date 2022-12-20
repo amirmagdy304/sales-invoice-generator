@@ -9,18 +9,31 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
-import java.util.*;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
-public class FileOperations extends JFrame{
+public class FileOperations {
     MessageController messageController = new MessageController();
+    private InvoiceLine invoiceLine;
+    private InvoiceHeader invoiceHeader;
 
-    public void writeFile(String invoiceHeaderFilePath,List<String[]> myData) {
+
+    public FileOperations(InvoiceHeader invoiceHeader, InvoiceLine invoiceLine) {
+//        super();
+        this.invoiceHeader = invoiceHeader;
+        this.invoiceLine = invoiceLine;
+    }
+
+
+    public void writeFile(String invoiceHeaderFilePath, List<String[]> myData) {
         CSVWriter invoiceFile = null;
         try {
-            if (!(invoiceHeaderFilePath.contains(".csv"))){
+            if (!(invoiceHeaderFilePath.contains(".csv"))) {
                 messageController.displayErrorMessage("Wrong file format");
             }
             invoiceFile = new CSVWriter(new FileWriter(invoiceHeaderFilePath));
@@ -28,7 +41,7 @@ public class FileOperations extends JFrame{
         } catch (IOException e) {
             messageController.displayErrorMessage(e.getMessage());
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 assert invoiceFile != null;
                 invoiceFile.close();
@@ -41,6 +54,7 @@ public class FileOperations extends JFrame{
     /**
      * used on the first run.
      * used to get the invoice header data
+     *
      * @param invoiceHeaderFilePath CSV File path invoiceHeaderFilePath
      * @return String[][]
      */
@@ -78,41 +92,41 @@ public class FileOperations extends JFrame{
      * @return String[]
      */
 
-    public String[] readTableHeader(String filePath) {
-        CSVReader fileHeader = null;
-        String [] tableHeader = null;
-
-        try {
-            fileHeader = new CSVReader(new FileReader(filePath));
-            tableHeader = fileHeader.readNext();
-//            Add below code in order to remove the first column [Invoice Number] from the invoice line sheet.
-            if (filePath.equals("src/main/resources/InvoiceLines.csv")){
-                tableHeader = ArrayUtils.removeElement(tableHeader, tableHeader[0]);
-            }
-        } catch (CsvValidationException | IOException e) {
-            messageController.displayErrorMessage(e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                assert fileHeader != null;
-                fileHeader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return tableHeader;
-    }
-
+//    public String[] readTableHeader(String filePath) {
+//        CSVReader fileHeader = null;
+//        String [] tableHeader = null;
+//
+//        try {
+//            fileHeader = new CSVReader(new FileReader(filePath));
+//            tableHeader = fileHeader.readNext();
+////            Add below code in order to remove the first column [Invoice Number] from the invoice line sheet.
+//            if (filePath.equals("src/main/resources/InvoiceLines.csv")){
+//                tableHeader = ArrayUtils.removeElement(tableHeader, tableHeader[0]);
+//            }
+//        } catch (CsvValidationException | IOException e) {
+//            messageController.displayErrorMessage(e.getMessage());
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                assert fileHeader != null;
+//                fileHeader.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return tableHeader;
+//    }
 
 
     /**
      * used on the first run.
      * used to get invoice lines filtered by invoice number
-     * @param invoiceNumber invoice Number which will be used on the filtration
+     *
+     * @param invoiceNumber        invoice Number which will be used on the filtration
      * @param invoiceLinesFilePath CSV file path invoiceLinesFilePath
      * @return String[][]
      */
-    public String[][] readTableData(String invoiceLinesFilePath,String invoiceNumber) {
+    public String[][] readTableData(String invoiceLinesFilePath, String invoiceNumber) {
         CSVReader invoiceFile = null;
         List<String[]> myData = new ArrayList<>();
         String[] currentRow;
@@ -143,6 +157,7 @@ public class FileOperations extends JFrame{
     /**
      * used on press the load button
      * update the invoices' header table.
+     *
      * @param component component
      * @return String[][]
      */
@@ -152,11 +167,18 @@ public class FileOperations extends JFrame{
         String filePath = null;
         if (result == JFileChooser.APPROVE_OPTION) {
             filePath = fileChooser.getSelectedFile().getPath();
+//            to ensure that selected file name is correct
+            if (filePath.contains("InvoiceHeader.csv")) {
+                invoiceHeader.setInvoiceHeaderFilePath(filePath);
+            }
+            if (filePath.contains("InvoiceLines.csv")) {
+                invoiceLine.setInvoiceLinesFilePath(filePath);
+            }
             String fileType = fileChooser.getTypeDescription(fileChooser.getSelectedFile());
-            if (!(fileType.equals("Microsoft Excel Comma Separated Values File"))){
+            if (!(fileType.equals("Microsoft Excel Comma Separated Values File"))) {
                 filePath = null;
                 messageController.displayErrorMessage("Wrong file format, Please select CSV comma delimited file.");
-            }else {
+            } else {
 
             }
 
@@ -166,15 +188,14 @@ public class FileOperations extends JFrame{
     }
 
 
-
-    public void saveInvoiceDataFromFIleChooser(Component component,String filePath) {
+    public void saveInvoiceDataFromFIleChooser(Component component, String filePath, String[] tableHeader) {
 
         List<String[]> myData = new ArrayList<>();
-        myData.add(readTableHeader(filePath));
+        myData.add(tableHeader);
         Collections.addAll(myData, readTableData(filePath));
         JFileChooser fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(component);
-        String selectedFilePath = null;
+        String selectedFilePath;
         if (result == JFileChooser.APPROVE_OPTION) {
             selectedFilePath = fileChooser.getSelectedFile().getPath();
 //            String fileType = fileChooser.getName();
@@ -183,22 +204,23 @@ public class FileOperations extends JFrame{
 //                selectedFilePath = null;
 //                messageController.displayErrorMessage("Wrong file format, Please select CSV comma delimited file.");
 //            }else {
-                writeFile(selectedFilePath,myData);
+            writeFile(selectedFilePath, myData);
 //            }
         }
     }
 
     /**
      * Delete Selected Invoice from both CSV files
-     * @param  invoicesTBL invoicesTBL
-     * @param filePath filePath
+     *
+     * @param invoicesTBL invoicesTBL
+     * @param filePath    filePath
      */
-    public void deleteSelectedRows(JTable invoicesTBL,String filePath) {
+    public void deleteSelectedRows(JTable invoicesTBL, String filePath) {
 
         String selectedInvoiceNumber = invoicesTBL.getValueAt(invoicesTBL.getSelectedRow(), 0).toString();
         CSVReader readerRemove = null;
         CSVReader readerAll = null;
-        List<String[]> myData= new ArrayList<>();
+        List<String[]> myData = new ArrayList<>();
         String[] currentRow;
         try {
             readerAll = new CSVReader(new FileReader(filePath));
@@ -225,6 +247,6 @@ public class FileOperations extends JFrame{
                 e.printStackTrace();
             }
         }
-        writeFile(filePath,myData);
+        writeFile(filePath, myData);
     }
 }

@@ -4,20 +4,28 @@ import javax.swing.*;
 
 public class MessageController {
 
-//    public void displayWrongFileFormatMessage() {
-//        JOptionPane.showMessageDialog(null,
-//                "Wrong file format, Please select CSV comma delimited file.",
-//                "ERROR_MESSAGE",
-//                JOptionPane.ERROR_MESSAGE);
-//    }
+    public void displayDescriptiveMessage(String message) {
+        JOptionPane.showMessageDialog(null,
+                message,
+                "INFORMATION_MESSAGE",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public int displayConfirmationMessage(String message) {
+        int userResponse = JOptionPane.showConfirmDialog(null,
+                message,
+                "Confirmation Message",
+                JOptionPane.YES_NO_OPTION);
+        return userResponse;
+    }
 
     public void displayErrorMessage(String message) {
-        if(message.contains("Unparseable date")){
+        if (message.contains("Unparseable date")) {
             JOptionPane.showMessageDialog(null,
-                    "Invalid date format. The valid format is dd/MM/yyyy \n "+message,
+                    "Invalid date format. The valid format is dd/MM/yyyy \n " + message,
                     "ERROR_MESSAGE",
                     JOptionPane.ERROR_MESSAGE);
-        }else{
+        } else {
             JOptionPane.showMessageDialog(null,
                     message,
                     "ERROR_MESSAGE",

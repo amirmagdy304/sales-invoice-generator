@@ -3,10 +3,16 @@ package model;
 public class InvoiceLine {
 
 
+    String[] invoiceLinesTableHeaders = {"item Number", "Item Name", "Item Price", "Count", "item Total"};
     String itemNameValue;
     double itemPriceValue;
     int itemCountValue;
     double itemTotal;
+    String invoiceLinesFilePath;
+
+    public String[] getInvoiceLinesTableHeaders() {
+        return invoiceLinesTableHeaders;
+    }
 
     public String getItemNameValue() {
         return itemNameValue;
@@ -41,6 +47,10 @@ public class InvoiceLine {
     }
 
     public String getInvoiceLinesFilePath() {
-        return "src/main/resources/InvoiceLines.csv";
+        return invoiceLinesFilePath;
+    }
+
+    public void setInvoiceLinesFilePath(String invoiceLinesFilePath) {
+        this.invoiceLinesFilePath = invoiceLinesFilePath;
     }
 }

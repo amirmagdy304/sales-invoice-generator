@@ -1,9 +1,8 @@
 package view;
 
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import controller.Controller;
+import controller.MessageController;
 import model.FileOperations;
 import model.InvoiceHeader;
 import model.InvoiceLine;
@@ -13,20 +12,19 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 class View extends JFrame {
 
 
 //    Variables declaration
 
-    Controller controller = new Controller();
+
     InvoiceLine invoiceLine = new InvoiceLine();
     InvoiceHeader invoiceHeader = new InvoiceHeader();
-    FileOperations fileOperations = new FileOperations();
+    MessageController messageController = new MessageController();
+    FileOperations fileOperations = new FileOperations(invoiceHeader, invoiceLine);
+    Controller controller = new Controller(invoiceHeader, invoiceLine, fileOperations);
     //  Declare menu bar
     private JMenuBar MenuBar;
     private JMenu fileMenu;
@@ -86,8 +84,7 @@ class View extends JFrame {
         invoicesTBLScrollPane = new JScrollPane();
 
         invoicesTBL = new JTable();
-        DefaultTableModel invoicesTableModel = new DefaultTableModel(fileOperations.readTableData(invoiceHeader.getInvoiceHeaderFilePath())
-                , fileOperations.readTableHeader(invoiceHeader.getInvoiceHeaderFilePath()));
+        DefaultTableModel invoicesTableModel = new DefaultTableModel(null, invoiceHeader.getInvoiceTableHeaders());
         invoicesTBL.setModel(invoicesTableModel);
         invoicesTBL.getSelectionModel().addListSelectionListener(evt -> selectRowActionPerformed());
 
@@ -106,9 +103,7 @@ class View extends JFrame {
         invoiceItemTBLScrollPane = new JScrollPane();
 
         invoiceLinesTBL = new JTable();
-        DefaultTableModel invoicesLinesTableModel = new DefaultTableModel(
-                fileOperations.readTableData( invoiceLine.getInvoiceLinesFilePath(),""),
-                fileOperations.readTableHeader(invoiceLine.getInvoiceLinesFilePath()));
+        DefaultTableModel invoicesLinesTableModel = new DefaultTableModel(null, invoiceLine.getInvoiceLinesTableHeaders());
         invoiceLinesTBL.setModel(invoicesLinesTableModel);
 
         saveBtn = new JButton();
@@ -285,37 +280,57 @@ class View extends JFrame {
                 invoiceDateTXT,
                 customerNameTXT,
                 invoiceTotalValueLBL);
+        messageController.displayDescriptiveMessage("Please fill the invoice data");
     }
 
     private void deleteInvoiceBtnActionPerformed() {
-        controller.deleteSelectedRows(invoicesTBL,invoiceLine.getInvoiceLinesFilePath(),invoiceHeader.getInvoiceHeaderFilePath());
-        cancelBtnActionPerformed();
+        if (messageController.displayConfirmationMessage("are you sure you want to delete this invoice") == 0) {
+            controller.deleteSelectedRows(invoicesTBL, invoiceLine.getInvoiceLinesFilePath(), invoiceHeader.getInvoiceHeaderFilePath());
+            controller.clearLinesTable(invoiceNumberValueLBL,
+                    invoiceLinesTBL,
+                    invoiceDateTXT,
+                    customerNameTXT,
+                    invoiceTotalValueLBL);
+            messageController.displayDescriptiveMessage("The invoice is deleted successfully");
+        }
+
     }
 
 
     private void saveBtnActionPerformed() {
-        controller.saveNewInvoice(invoiceNumberValueLBL,
-                invoiceDateTXT,
-                customerNameTXT,
-                invoiceLinesTBL,
-                invoicesTBL);
+        if (messageController.displayConfirmationMessage("are you sure you want to save new invoice") == 0) {
+            controller.saveNewInvoice(invoiceNumberValueLBL,
+                    invoiceDateTXT,
+                    customerNameTXT,
+                    invoiceLinesTBL,
+                    invoicesTBL);
+            messageController.displayDescriptiveMessage("The invoice is saved successfully");
+        }
 
     }
 
     private void cancelBtnActionPerformed() {
-        controller.clearLinesTable(invoiceNumberValueLBL,
-                invoiceLinesTBL,
-                invoiceDateTXT,
-                customerNameTXT,
-                invoiceTotalValueLBL);
+        if (messageController.displayConfirmationMessage("are you sure you want to cancel") == 0) {
+            controller.clearLinesTable(invoiceNumberValueLBL,
+                    invoiceLinesTBL,
+                    invoiceDateTXT,
+                    customerNameTXT,
+                    invoiceTotalValueLBL);
+            messageController.displayDescriptiveMessage("The invoice is cancelled successfully");
+        }
+
     }
 
     private void loadFileMenuBtnActionPerformed() {
-
-        controller.loadFromFile(this, invoicesTBL);
+        messageController.displayDescriptiveMessage("Please select the InvoiceHeader.csv file");
+        controller.loadFromFile(this, invoicesTBL, invoiceHeader.getInvoiceTableHeaders());
+        messageController.displayDescriptiveMessage("Please select the InvoiceLines.csv file");
+        controller.loadFromFile(this, invoiceLinesTBL, invoiceLine.getInvoiceLinesTableHeaders());
+        messageController.displayDescriptiveMessage("CSV files are loaded successfully");
     }
 
     private void selectRowActionPerformed() {
+
         controller.loadSelectedInvoiceLines(invoicesTBL,
                 invoiceLinesTBL,
                 invoiceNumberValueLBL,
@@ -325,8 +340,10 @@ class View extends JFrame {
     }
 
     private void saveFileMenuBtnActionPerformed() {
-        fileOperations.saveInvoiceDataFromFIleChooser(this,invoiceHeader.getInvoiceHeaderFilePath());
-        fileOperations.saveInvoiceDataFromFIleChooser(this,invoiceLine.getInvoiceLinesFilePath());
+        messageController.displayDescriptiveMessage("Please select path to Save InvoiceHeader.csv file");
+        fileOperations.saveInvoiceDataFromFIleChooser(this, invoiceHeader.getInvoiceHeaderFilePath(), invoiceHeader.getInvoiceTableHeaders());
+        messageController.displayDescriptiveMessage("Please select path to Save InvoiceHeader.csv file");
+        fileOperations.saveInvoiceDataFromFIleChooser(this, invoiceLine.getInvoiceLinesFilePath(), invoiceLine.getInvoiceLinesTableHeaders());
     }
 
 }

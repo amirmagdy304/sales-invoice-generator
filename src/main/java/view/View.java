@@ -50,6 +50,9 @@ class View extends JFrame {
     private JLabel invoiceTotalLBL;
     private JLabel invoiceTotalValueLBL;
     private JLabel invoicesItemsTableTitleLBL;
+    private JButton deleteItemBtn;
+    private JButton createItemBtn;
+
 
     // End of variables declaration
     private JScrollPane invoiceItemTBLScrollPane;
@@ -100,6 +103,8 @@ class View extends JFrame {
         invoiceTotalLBL = new JLabel();
         invoiceTotalValueLBL = new JLabel();
         invoicesItemsTableTitleLBL = new JLabel();
+        deleteItemBtn = new javax.swing.JButton();
+        createItemBtn = new javax.swing.JButton();
         invoiceItemTBLScrollPane = new JScrollPane();
 
         invoiceLinesTBL = new JTable();
@@ -155,17 +160,17 @@ class View extends JFrame {
         );
 
         invoiceNumberLBL.setText("Invoice Number");
-        invoiceNumberValueLBL.setText("");
+        invoiceNumberValueLBL.setText(null);
         invoiceDateLBL.setText("Invoice Date");
-        invoiceDateTXT.setText("");
+        invoiceDateTXT.setText(null);
 
         customerNameLBL.setText("Customer Name");
-        customerNameTXT.setText("");
+        customerNameTXT.setText(null);
         invoiceTotalLBL.setText("Invoice Total");
-        invoiceTotalValueLBL.setText("");
+        invoiceTotalValueLBL.setText(null);
 
         invoiceItemTBLScrollPane.setViewportView(invoiceLinesTBL);
-        saveBtn.setText("Save");
+        saveBtn.setText("Save Invoice");
         saveBtn.addActionListener(
                 evt -> saveBtnActionPerformed());
 
@@ -174,6 +179,12 @@ class View extends JFrame {
                 evt -> cancelBtnActionPerformed());
 
         invoicesItemsTableTitleLBL.setText("Invoice Items");
+        deleteItemBtn.setText("Delete Line");
+        deleteItemBtn.addActionListener(this::deleteItemBtnActionPerformed);
+
+        createItemBtn.setText("Create Item");
+        createItemBtn.addActionListener(this::createItemBtnActionPerformed);
+
         GroupLayout rightPanelLayout = new GroupLayout(rightPanel);
         rightPanel.setLayout(rightPanelLayout);
         rightPanelLayout.setHorizontalGroup(
@@ -198,15 +209,17 @@ class View extends JFrame {
                                                 .addGroup(rightPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                                         .addGroup(rightPanelLayout.createSequentialGroup()
                                                                 .addGap(92, 92, 92)
-                                                                .addComponent(saveBtn, GroupLayout.PREFERRED_SIZE, 103, GroupLayout.PREFERRED_SIZE)
+                                                                .addComponent(saveBtn, GroupLayout.PREFERRED_SIZE, 123, GroupLayout.PREFERRED_SIZE)
                                                                 .addGap(69, 69, 69)
                                                                 .addComponent(cancelBtn, GroupLayout.PREFERRED_SIZE, 123, GroupLayout.PREFERRED_SIZE))
                                                         .addGroup(rightPanelLayout.createSequentialGroup()
                                                                 .addContainerGap()
                                                                 .addComponent(invoicesItemsTableTitleLBL, GroupLayout.PREFERRED_SIZE, 82, GroupLayout.PREFERRED_SIZE)))
-                                                .addGap(0, 0, Short.MAX_VALUE)))
-                                .addContainerGap())
-        );
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(createItemBtn)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(deleteItemBtn)))
+                                .addContainerGap()));
         rightPanelLayout.setVerticalGroup(
                 rightPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(rightPanelLayout.createSequentialGroup()
@@ -227,8 +240,11 @@ class View extends JFrame {
                                         .addComponent(invoiceTotalLBL)
                                         .addComponent(invoiceTotalValueLBL))
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(rightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(invoicesItemsTableTitleLBL)
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(deleteItemBtn)
+                                .addComponent(createItemBtn))
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(invoiceItemTBLScrollPane, GroupLayout.PREFERRED_SIZE, 408, GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
                                 .addGroup(rightPanelLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
@@ -280,33 +296,28 @@ class View extends JFrame {
                 invoiceDateTXT,
                 customerNameTXT,
                 invoiceTotalValueLBL);
-        messageController.displayDescriptiveMessage("Please fill the invoice data");
+
     }
 
     private void deleteInvoiceBtnActionPerformed() {
-        if (messageController.displayConfirmationMessage("are you sure you want to delete this invoice") == 0) {
-            controller.deleteSelectedRows(invoicesTBL, invoiceLine.getInvoiceLinesFilePath(), invoiceHeader.getInvoiceHeaderFilePath());
+
+            controller.deleteSelectedInvoiceRows(invoicesTBL, invoiceLine.getInvoiceLinesFilePath(), invoiceHeader.getInvoiceHeaderFilePath());
             controller.clearLinesTable(invoiceNumberValueLBL,
                     invoiceLinesTBL,
                     invoiceDateTXT,
                     customerNameTXT,
                     invoiceTotalValueLBL);
-            messageController.displayDescriptiveMessage("The invoice is deleted successfully");
-        }
-
     }
 
 
     private void saveBtnActionPerformed() {
-        if (messageController.displayConfirmationMessage("are you sure you want to save new invoice") == 0) {
+
             controller.saveNewInvoice(invoiceNumberValueLBL,
                     invoiceDateTXT,
                     customerNameTXT,
                     invoiceLinesTBL,
-                    invoicesTBL);
-            messageController.displayDescriptiveMessage("The invoice is saved successfully");
-        }
-
+                    invoicesTBL,
+                    invoiceTotalValueLBL);
     }
 
     private void cancelBtnActionPerformed() {
@@ -344,6 +355,24 @@ class View extends JFrame {
         fileOperations.saveInvoiceDataFromFIleChooser(this, invoiceHeader.getInvoiceHeaderFilePath(), invoiceHeader.getInvoiceTableHeaders());
         messageController.displayDescriptiveMessage("Please select path to Save InvoiceHeader.csv file");
         fileOperations.saveInvoiceDataFromFIleChooser(this, invoiceLine.getInvoiceLinesFilePath(), invoiceLine.getInvoiceLinesTableHeaders());
+    }
+
+    /**
+     *Used while creating a new invoice
+     * on pressing it the system will add a new empty item row
+     */
+
+    private void createItemBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        controller.createNewItemRow(invoiceLinesTBL,invoiceTotalValueLBL,invoiceNumberValueLBL);
+    }
+
+    /**
+     * Used while creating a new invoice,
+     * on pressing it the system will delete the selected item row.
+     *
+     */
+    private void deleteItemBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        controller.deleteSelectedItemRow(invoiceLinesTBL);
     }
 
 }

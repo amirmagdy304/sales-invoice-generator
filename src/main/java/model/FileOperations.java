@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
 import com.opencsv.exceptions.CsvValidationException;
+import controller.Controller;
 import controller.MessageController;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -215,7 +216,7 @@ public class FileOperations {
      * @param invoicesTBL invoicesTBL
      * @param filePath    filePath
      */
-    public void deleteSelectedRows(JTable invoicesTBL, String filePath) {
+    public void deleteSelectedInvoiceRows(JTable invoicesTBL, String filePath) {
 
         String selectedInvoiceNumber = invoicesTBL.getValueAt(invoicesTBL.getSelectedRow(), 0).toString();
         CSVReader readerRemove = null;
@@ -248,5 +249,16 @@ public class FileOperations {
             }
         }
         writeFile(filePath, myData);
+    }
+
+    public static void main(String[] args) {
+        InvoiceLine invoiceLine = new InvoiceLine();
+        InvoiceHeader invoiceHeader = new InvoiceHeader();
+        MessageController messageController = new MessageController();
+        FileOperations fileOperations = new FileOperations(invoiceHeader, invoiceLine);
+        Controller controller = new Controller(invoiceHeader, invoiceLine, fileOperations);
+
+
+
     }
 }

@@ -71,76 +71,90 @@ public class Controller {
                                JTextField invoiceDateTXT,
                                JTextField customerNameTXT,
                                JTable invoiceLinesTBL,
-                               JTable invoicesTBL) {
+                               JTable invoicesTBL,
+                               JLabel invoiceTotalValueLBL) {
         //      Add new Lines to the InvoiceLines.csv
-
-        CSVWriter invoiceLinesWriter = null;
-        double invoiceTotal = 0;
-        try {
-            invoiceLinesWriter = new CSVWriter(new FileWriter(invoiceLine.getInvoiceLinesFilePath(), true));
-            DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
-            int rowCount = invoiceLinesModel.getRowCount();
-            int currentRowNumber = 0;
-            while (currentRowNumber < rowCount) {
-//                String itemNumberValue = invoiceLinesModel.getValueAt(currentRowNumber, 0).toString();
-                invoiceLine.setItemNameValue(invoiceLinesModel.getValueAt(currentRowNumber, 1).toString());
-                invoiceLine.setItemPriceValue(Double.parseDouble(invoiceLinesModel.getValueAt(currentRowNumber, 2).toString()));
-                invoiceLine.setItemCountValue(Integer.parseInt(invoiceLinesModel.getValueAt(currentRowNumber, 3).toString()));
-                invoiceTotal += getLineTotal(invoiceLinesTBL, currentRowNumber);
-                invoiceLine.setItemTotal(Double.parseDouble(String.valueOf(getLineTotal(invoiceLinesTBL, currentRowNumber))));
-
-                String[] invoiceLineRecord = new String[]{invoiceNumberValueLBL.getText(),
-//                        itemNumberValue,
-                        invoiceLine.getItemNameValue(),
-                        String.valueOf(invoiceLine.getItemPriceValue()),
-                        String.valueOf(invoiceLine.getItemPriceValue()),
-                        String.valueOf(invoiceLine.getItemTotal())};
-                invoiceLinesWriter.writeNext(invoiceLineRecord, false);
-                currentRowNumber++;
-            }
-        } catch (IOException e) {
-            messageController.displayErrorMessage(e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                assert invoiceLinesWriter != null;
-                invoiceLinesWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-//        Add new Line to the InvoiceHeader.csv
-        CSVWriter invoiceWriter = null;
-        try {
-            invoiceWriter = new CSVWriter(new FileWriter(invoiceHeader.getInvoiceHeaderFilePath(), true));
-            Date invoiceDate = null;
+        if (messageController.displayConfirmationMessage("are you sure you want to save new invoice") == 0) {
+        Date invoiceDate = null;
+        if (invoiceNumberValueLBL.getText()==null || !(invoiceTotalValueLBL.getText()==null)){
+            messageController.displayErrorMessage("you should press on the 'Create new invoice' button first");
+        }else if (invoiceDateTXT.getText().equals("")){
+            messageController.displayErrorMessage("Invoice date is mandatory, please make sure to add \n correct date format dd/mm/yyyy");
+        }else if(customerNameTXT.getText().equals("")){
+            messageController.displayErrorMessage("Please enter the customer name");
+        }else if(invoiceLinesTBL.getRowCount()<1){
+            messageController.displayErrorMessage("Please add one item at least");
+        }else{
             try {
                 invoiceDate = new SimpleDateFormat("dd/MM/yyyy").parse(invoiceDateTXT.getText());
             } catch (ParseException e) {
                 messageController.displayErrorMessage(e.getMessage());
                 e.printStackTrace();
             }
-            String[] invoiceRecord = new String[]{invoiceNumberValueLBL.getText(),
-                    invoiceDate.toString(),
-                    customerNameTXT.getText(),
-                    String.valueOf(invoiceTotal)};
-            invoiceWriter.writeNext(invoiceRecord, false);
-
-        } catch (IOException e) {
-            messageController.displayErrorMessage(e.getMessage());
-            e.printStackTrace();
-        } finally {
+            CSVWriter invoiceLinesWriter = null;
+            double invoiceTotal = 0;
             try {
-                assert invoiceWriter != null;
-                invoiceWriter.close();
+                invoiceLinesWriter = new CSVWriter(new FileWriter(invoiceLine.getInvoiceLinesFilePath(), true));
+                DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
+                int rowCount = invoiceLinesModel.getRowCount();
+                int currentRowNumber = 0;
+                while (currentRowNumber < rowCount) {
+//                String itemNumberValue = invoiceLinesModel.getValueAt(currentRowNumber, 0).toString();
+                    invoiceLine.setItemNameValue(invoiceLinesModel.getValueAt(currentRowNumber, 1).toString());
+                    invoiceLine.setItemPriceValue(Double.parseDouble(invoiceLinesModel.getValueAt(currentRowNumber, 2).toString()));
+                    invoiceLine.setItemCountValue(Integer.parseInt(invoiceLinesModel.getValueAt(currentRowNumber, 3).toString()));
+                    invoiceTotal += getLineTotal(invoiceLinesTBL, currentRowNumber);
+                    invoiceLine.setItemTotal(Double.parseDouble(String.valueOf(getLineTotal(invoiceLinesTBL, currentRowNumber))));
+
+                    String[] invoiceLineRecord = new String[]{invoiceNumberValueLBL.getText(),
+//                        itemNumberValue,
+                            invoiceLine.getItemNameValue(),
+                            String.valueOf(invoiceLine.getItemPriceValue()),
+                            String.valueOf(invoiceLine.getItemPriceValue()),
+                            String.valueOf(invoiceLine.getItemTotal())};
+                    invoiceLinesWriter.writeNext(invoiceLineRecord, false);
+                    currentRowNumber++;
+                }
             } catch (IOException e) {
+                messageController.displayErrorMessage(e.getMessage());
                 e.printStackTrace();
+            } finally {
+                try {
+                    assert invoiceLinesWriter != null;
+                    invoiceLinesWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+
+//        Add new Line to the InvoiceHeader.csv
+            CSVWriter invoiceWriter = null;
+            try {
+                invoiceWriter = new CSVWriter(new FileWriter(invoiceHeader.getInvoiceHeaderFilePath(), true));
+
+                String[] invoiceRecord = new String[]{invoiceNumberValueLBL.getText(),
+                        invoiceDate.toString(),
+                        customerNameTXT.getText(),
+                        String.valueOf(invoiceTotal)};
+                invoiceWriter.writeNext(invoiceRecord, false);
+
+            } catch (IOException e) {
+                messageController.displayErrorMessage(e.getMessage());
+                e.printStackTrace();
+            } finally {
+                try {
+                    assert invoiceWriter != null;
+                    invoiceWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
 //        Refresh the invoice header list so the new invoice reflect immediately on the GUI
-        refreshTableData(invoicesTBL, invoiceHeader.getInvoiceHeaderFilePath(), invoiceHeader.getInvoiceTableHeaders());
+            refreshTableData(invoicesTBL, invoiceHeader.getInvoiceHeaderFilePath(), invoiceHeader.getInvoiceTableHeaders());
+            messageController.displayDescriptiveMessage("The invoice is saved successfully");
+        }
+        }
     }
 
 
@@ -166,17 +180,46 @@ public class Controller {
                                  JTextField customerNameTXT,
                                  JLabel invoiceTotalValueLBL) {
 
-        clearLinesTable(invoiceNumberValueLBL,
-                invoiceLinesTBL,
-                invoiceDateTXT,
-                customerNameTXT,
-                invoiceTotalValueLBL);
+        if (invoiceHeader.getInvoiceHeaderFilePath()== null){
+            messageController.displayErrorMessage("please load the InvoiceHeader.csv and InvoiceLines.csv first,\n press on File Menu ==> load File button");
+        }else{
+            messageController.displayDescriptiveMessage("Please fill the invoice data");
+            clearLinesTable(invoiceNumberValueLBL,
+                    invoiceLinesTBL,
+                    invoiceDateTXT,
+                    customerNameTXT,
+                    invoiceTotalValueLBL);
+            DefaultTableModel invoiceModel = (DefaultTableModel) invoicesTBL.getModel();
+            invoiceNumberValueLBL.setText(String.valueOf((invoiceModel.getRowCount() + 1)));
+            createNewItemRow(invoiceLinesTBL,invoiceTotalValueLBL,invoiceNumberValueLBL);
+        }
+    }
 
-        DefaultTableModel invoiceModel = (DefaultTableModel) invoicesTBL.getModel();
-        invoiceNumberValueLBL.setText(String.valueOf((invoiceModel.getRowCount() + 1)));
+    public void createNewItemRow(JTable invoiceLinesTBL,JLabel invoiceTotalValueLBL,JLabel invoiceNumberValueLBL) {
         DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
-        invoiceLinesModel.addRow(new String[invoiceLinesModel.getColumnCount()]);
-        invoiceLinesModel.addRow(new String[invoiceLinesModel.getColumnCount()]);
+        if (invoiceTotalValueLBL.getText()==null && !(invoiceNumberValueLBL.getText()==null)){
+            invoiceLinesModel.addRow(new String[invoiceLinesModel.getColumnCount()]);
+        }else {
+
+            messageController.displayErrorMessage("you should press on the 'Create new invoice' button first");
+        }
+
+
+    }
+
+    public void deleteSelectedItemRow(JTable invoiceLinesTBL) {
+        DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
+
+        int selectedRow = invoiceLinesTBL.getSelectedRow();
+        if(selectedRow <0){
+            messageController.displayErrorMessage("Please select any item row");
+        }else {
+            if (messageController.displayConfirmationMessage("are you sure you to delete this item line?") == 0){
+                invoiceLinesModel.removeRow(selectedRow);
+            }
+        }
+
+
     }
 
     public void clearLinesTable(JLabel invoiceNumberValueLBL,
@@ -184,10 +227,10 @@ public class Controller {
                                 JTextField invoiceDateTXT,
                                 JTextField customerNameTXT,
                                 JLabel invoiceTotalValueLBL) {
-        invoiceNumberValueLBL.setText("");
-        invoiceDateTXT.setText("");
-        customerNameTXT.setText("");
-        invoiceTotalValueLBL.setText("");
+        invoiceNumberValueLBL.setText(null);
+        invoiceDateTXT.setText(null);
+        customerNameTXT.setText(null);
+        invoiceTotalValueLBL.setText(null);
 
         DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
         int rowCount = invoiceLinesModel.getRowCount();
@@ -200,10 +243,19 @@ public class Controller {
     }
 
 
-    public void deleteSelectedRows(JTable invoicesTBL, String invoiceLinesFilePath, String invoiceHeaderFilePath) {
-        fileOperations.deleteSelectedRows(invoicesTBL, invoiceLinesFilePath);
-        fileOperations.deleteSelectedRows(invoicesTBL, invoiceHeaderFilePath);
-        refreshTableData(invoicesTBL, invoiceHeaderFilePath, invoiceHeader.getInvoiceTableHeaders());
+    public void deleteSelectedInvoiceRows(JTable invoicesTBL, String invoiceLinesFilePath, String invoiceHeaderFilePath) {
+        if (invoicesTBL.getSelectedRow()<0){
+            messageController.displayErrorMessage("please select an invoice");
+        }else {
+            if ((messageController.displayConfirmationMessage("are you sure you want to delete this invoice") == 0)){
+                fileOperations.deleteSelectedInvoiceRows(invoicesTBL, invoiceLinesFilePath);
+                fileOperations.deleteSelectedInvoiceRows(invoicesTBL, invoiceHeaderFilePath);
+                refreshTableData(invoicesTBL, invoiceHeaderFilePath, invoiceHeader.getInvoiceTableHeaders());
+                messageController.displayDescriptiveMessage("The invoice is deleted successfully");
+            }
+
+        }
+
     }
 
 

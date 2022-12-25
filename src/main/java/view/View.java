@@ -372,7 +372,7 @@ class View extends JFrame {
      *
      */
     private void deleteItemBtnActionPerformed(java.awt.event.ActionEvent evt) {
-        controller.deleteSelectedItemRow(invoiceLinesTBL);
+        controller.deleteSelectedItemRow(invoiceLinesTBL,invoiceNumberValueLBL,invoiceLine.getInvoiceLinesFilePath());
     }
 
 }

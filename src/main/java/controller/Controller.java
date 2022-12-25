@@ -207,19 +207,23 @@ public class Controller {
 
     }
 
-    public void deleteSelectedItemRow(JTable invoiceLinesTBL) {
+    public void deleteSelectedItemRow(JTable invoiceLinesTBL,JLabel invoiceNumberValueLBL,String invoiceLinesFilePath) {
         DefaultTableModel invoiceLinesModel = (DefaultTableModel) invoiceLinesTBL.getModel();
-
         int selectedRow = invoiceLinesTBL.getSelectedRow();
-        if(selectedRow <0){
-            messageController.displayErrorMessage("Please select any item row");
-        }else {
-            if (messageController.displayConfirmationMessage("are you sure you to delete this item line?") == 0){
-                invoiceLinesModel.removeRow(selectedRow);
+        if (invoiceNumberValueLBL.getText()==null){
+            messageController.displayErrorMessage("Cannot delete line without selecting it's invoice\n please select the invoice header first");
+        }else{
+            if(selectedRow <0){
+                messageController.displayErrorMessage("Please select any item row");
+            }else {
+                if (messageController.displayConfirmationMessage("are you sure you to delete this item line?") == 0){
+                    String invoiceNumber= invoiceNumberValueLBL.getText();
+                    String itemNumber= String.valueOf(invoiceLinesTBL.getValueAt(selectedRow,0));
+                    invoiceLinesModel.removeRow(selectedRow);
+                    fileOperations.deleteSelectedInvoiceRows(invoiceLinesFilePath,invoiceNumber,itemNumber);
+                }
             }
         }
-
-
     }
 
     public void clearLinesTable(JLabel invoiceNumberValueLBL,
@@ -247,7 +251,8 @@ public class Controller {
         if (invoicesTBL.getSelectedRow()<0){
             messageController.displayErrorMessage("please select an invoice");
         }else {
-            if ((messageController.displayConfirmationMessage("are you sure you want to delete this invoice") == 0)){
+            if ((messageController.displayConfirmationMessage("are you sure you want to delete this invoice") == 0))
+            {
                 fileOperations.deleteSelectedInvoiceRows(invoicesTBL, invoiceLinesFilePath);
                 fileOperations.deleteSelectedInvoiceRows(invoicesTBL, invoiceHeaderFilePath);
                 refreshTableData(invoicesTBL, invoiceHeaderFilePath, invoiceHeader.getInvoiceTableHeaders());

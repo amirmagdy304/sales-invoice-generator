@@ -219,8 +219,8 @@ public class FileOperations {
     public void deleteSelectedInvoiceRows(JTable invoicesTBL, String filePath) {
 
         String selectedInvoiceNumber = invoicesTBL.getValueAt(invoicesTBL.getSelectedRow(), 0).toString();
-        CSVReader readerRemove = null;
         CSVReader readerAll = null;
+        CSVReader readerRemove = null;
         List<String[]> myData = new ArrayList<>();
         String[] currentRow;
         try {
@@ -231,6 +231,47 @@ public class FileOperations {
             while ((currentRow = readerRemove.readNext()) != null) {
                 String invoiceNumberValue = currentRow[0];
                 if ((invoiceNumberValue.equals(selectedInvoiceNumber))) {
+                    myData.remove(currentRowIndex);
+                    currentRowIndex--;
+                }
+                currentRowIndex++;
+            }
+        } catch (IOException | CsvException e) {
+            messageController.displayErrorMessage(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                assert readerRemove != null;
+                readerRemove.close();
+                readerAll.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        writeFile(filePath, myData);
+    }
+
+    /**
+     * used this method on delete item lines only without deleting the invoice [on press delete item button]
+     * @param filePath
+     * @param invoiceNumber
+     * @param itemNumber
+     */
+    public void deleteSelectedInvoiceRows(String filePath,String invoiceNumber, String itemNumber) {
+
+        CSVReader readerAll = null;
+        CSVReader readerRemove = null;
+        List<String[]> myData = new ArrayList<>();
+        String[] currentRow;
+        try {
+            readerAll = new CSVReader(new FileReader(filePath));
+            myData = readerAll.readAll();
+            readerRemove = new CSVReader(new FileReader(filePath));
+            int currentRowIndex = 0;
+            while ((currentRow = readerRemove.readNext()) != null) {
+                String invoiceNumberValue = currentRow[0];
+                String itemNumberValue = currentRow[1];
+                if ((invoiceNumberValue.equals(invoiceNumber))&& itemNumber.equals(itemNumberValue)) {
                     myData.remove(currentRowIndex);
                     currentRowIndex--;
                 }
